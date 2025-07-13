@@ -13,8 +13,12 @@ def excel_to_python_data(file_path: str) -> Any:
     if not isinstance(file_path, str):
         print("'Путь к файлу' должен быть строкой. Возвращаем пустой список.")
         return []
-    df = pd.read_excel(file_path)
-    excel_data = df.to_dict("records")
+    try:
+        df = pd.read_excel(file_path)
+        excel_data = df.to_dict("records")
+    except OSError:
+        print("Ошибка декодирования файла, возвращаем пустой список.")
+        return []
     return list(excel_data)
 
 
