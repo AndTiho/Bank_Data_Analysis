@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import json
 import os
 import urllib
@@ -6,6 +6,7 @@ from typing import Any
 
 import pandas as pd
 import requests
+from black.trans import defaultdict
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -67,10 +68,10 @@ def get_stocks_data(stocks_list: list) -> Any:
     return result
 
 
-def greetings(date: str) -> str:
-    """Функция принимает на вход Дату в виде строки, преобразует в объект времени
-    и возвращает"""
-    date_object = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+def greetings() -> str:
+    """Функция определяет текущее время и приветствует героя
+     по всем правилам этикета времени"""
+    date_object = datetime.now()
     if 5 <= date_object.hour < 11:
         return "Доброе утро"
     elif 11 <= date_object.hour < 16:
@@ -100,7 +101,7 @@ def filter_by_date(df, user_date: str) -> pd.DataFrame:
 def total_spent(df) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам, группирует по 'Номер карты' и возвращает словарь, где
-    ключ: номер карты, значение: сумма всех расходов"""
+    ключ: Номер карты, значение: сумма всех трат по карте """
     df_state = df[df["Статус"] == "OK"]
     df_negative = df_state[df_state["Сумма платежа"] < 0]
     card_name_grouped = df_negative.groupby("Номер карты")
@@ -118,9 +119,6 @@ def top_transactions(df) -> Any:
     df_sort_five = df_sort.head(5)
     top_five = df_sort_five.to_dict("records")
     return top_five
-
-
-# print((top_transactions(filter_by_date((excel_to_df(PATH_TO_EXCEL)),end_date = '2021-12-15')))[0])
 
 
 def last_four_card_numbers(card_number: str) -> str:
