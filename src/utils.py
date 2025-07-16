@@ -1,12 +1,11 @@
-from datetime import datetime
 import json
 import os
 import urllib
+from datetime import datetime
 from typing import Any
 
 import pandas as pd
 import requests
-from black.trans import defaultdict
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -70,7 +69,7 @@ def get_stocks_data(stocks_list: list) -> Any:
 
 def greetings() -> str:
     """Функция определяет текущее время и приветствует героя
-     по всем правилам этикета времени"""
+    по всем правилам этикета времени"""
     date_object = datetime.now()
     if 5 <= date_object.hour < 11:
         return "Доброе утро"
@@ -101,7 +100,7 @@ def filter_by_date(df, user_date: str) -> pd.DataFrame:
 def total_spent(df) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам, группирует по 'Номер карты' и возвращает словарь, где
-    ключ: Номер карты, значение: сумма всех трат по карте """
+    ключ: Номер карты, значение: сумма всех трат по карте"""
     df_state = df[df["Статус"] == "OK"]
     df_negative = df_state[df_state["Сумма платежа"] < 0]
     card_name_grouped = df_negative.groupby("Номер карты")
@@ -119,11 +118,6 @@ def top_transactions(df) -> Any:
     df_sort_five = df_sort.head(5)
     top_five = df_sort_five.to_dict("records")
     return top_five
-
-
-def last_four_card_numbers(card_number: str) -> str:
-    """Функция, которая принимает на вход номер карты и возвращает последние 4 цифры номера"""
-    return card_number[-4:]
 
 
 # def excel_to_python_data(file_path: str) -> Any:
