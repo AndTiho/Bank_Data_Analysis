@@ -1,0 +1,30 @@
+import datetime
+import json
+from typing import Optional
+
+import pandas as pd
+
+from utils import excel_to_df, PATH_TO_EXCEL, filter_by_date_three_month
+
+
+def spending_by_category(transactions: pd.DataFrame,
+                         category: str,
+                         date: Optional[str] = None):
+    """Функция принимает данные транзакций, категорию на выбор пользователя и дату
+    (по умолчанию берётся сегодняшняя) и возвращает траты по заданной категории за последние три месяца"""
+    #Если даты нет, создаём её сами черед datetime.now()
+    if not date:
+        date = datetime.datetime.now()
+    # Фильтруем по заданной дате за минусом трёх месяцев
+    filtered_df = filter_by_date_three_month(transactions, date)
+    # Фильтруем по заданной категории
+    category_df = filtered_df[filtered_df['Категория'] == category]
+    category_df['Дата платежа'] = category_df['Дата платежа'].dt.strftime('%Y-%m-%d')
+    result = category_df.to_dict("records")
+
+    # Возвращаем JSON
+    return json.dumps(result, ensure_ascii=False, indent=4)
+
+
+df = excel_to_df(PATH_TO_EXCEL)
+print(spending_by_category(df, 'Супермаркеты', '2021-10-20'))

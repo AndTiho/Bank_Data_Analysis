@@ -2,6 +2,7 @@ import json
 import os
 import urllib
 from datetime import datetime
+import datetime
 from typing import Any
 
 import pandas as pd
@@ -97,6 +98,18 @@ def filter_by_date(df, user_date: str) -> pd.DataFrame:
     return df[(df["Дата платежа"] >= start_of_month) & (df["Дата платежа"] <= end_date)]
 
 
+def filter_by_date_three_month(df, user_date: str) -> pd.DataFrame:
+    """Функция принимает на вход дату и
+    фильтрует DataFrame в диапазоне последние три месяца от принимаемой даты
+    Дату вводить в формате YYYY-MM-DD
+    """
+    ddate_obj = datetime.datetime.strptime(user_date, "%Y-%m-%d")
+    df["Дата платежа"] = pd.to_datetime(df["Дата платежа"], dayfirst=True)
+    end_date = pd.to_datetime(user_date)
+    start_date = end_date.replace(month=end_date.month - 3)
+    return df[(df["Дата платежа"] >= start_date ) & (df["Дата платежа"] <= end_date)]
+
+
 def total_spent(df) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам, группирует по 'Номер карты' и возвращает словарь, где
@@ -119,6 +132,15 @@ def top_transactions(df) -> Any:
     top_five = df_sort_five.to_dict("records")
     return top_five
 
+def write_to_file(file_name):
+    def writing(func):
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            with open('file_name', 'w', encoding='utf-8') as file:
+                file.write(result)
+            return result
+        return wrapper
+    return writing
 
 # def excel_to_python_data(file_path: str) -> Any:
 #     """Функция принимает ПУТЬ к файлу EXCEL и преобразует его в Python список словарей,
