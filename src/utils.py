@@ -136,7 +136,7 @@ def write_to_file(file_name):
     def writing(func):
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            with open('file_name', 'w', encoding='utf-8') as file:
+            with open(file_name, 'w', encoding='utf-8') as file:
                 file.write(result)
             return result
         return wrapper

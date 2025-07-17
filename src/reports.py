@@ -4,9 +4,10 @@ from typing import Optional
 
 import pandas as pd
 
-from utils import excel_to_df, PATH_TO_EXCEL, filter_by_date_three_month
+from utils import excel_to_df, PATH_TO_EXCEL, filter_by_date_three_month, write_to_file
 
 
+@write_to_file('./data/results.txt')
 def spending_by_category(transactions: pd.DataFrame,
                          category: str,
                          date: Optional[str] = None):
@@ -17,9 +18,10 @@ def spending_by_category(transactions: pd.DataFrame,
         date = datetime.datetime.now()
     # Фильтруем по заданной дате за минусом трёх месяцев
     filtered_df = filter_by_date_three_month(transactions, date)
-    # Фильтруем по заданной категории
+    # Фильтруем по заданной категории и возвращаем столбцу Дата платежа
+    # тип - строка, а то JSON ругается.
     category_df = filtered_df[filtered_df['Категория'] == category]
-    category_df['Дата платежа'] = category_df['Дата платежа'].dt.strftime('%Y-%m-%d')
+    category_df['Дата платежа'] = category_df['Дата платежа'].astype(str)
     result = category_df.to_dict("records")
 
     # Возвращаем JSON
