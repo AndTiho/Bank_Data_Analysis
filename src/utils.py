@@ -2,9 +2,7 @@ import json
 import os
 import urllib
 from datetime import datetime
-import datetime
 from typing import Any
-
 import pandas as pd
 import requests
 from dotenv import load_dotenv
@@ -103,11 +101,11 @@ def filter_by_date_three_month(df, user_date: str) -> pd.DataFrame:
     фильтрует DataFrame в диапазоне последние три месяца от принимаемой даты
     Дату вводить в формате YYYY-MM-DD
     """
-    ddate_obj = datetime.datetime.strptime(user_date, "%Y-%m-%d")
-    df["Дата платежа"] = pd.to_datetime(df["Дата платежа"], dayfirst=True)
+    df_copy = df.copy()
+    df_copy.loc[:, "Дата платежа"] = pd.to_datetime(df_copy["Дата платежа"], dayfirst=True)
     end_date = pd.to_datetime(user_date)
-    start_date = end_date.replace(month=end_date.month - 3)
-    return df[(df["Дата платежа"] >= start_date ) & (df["Дата платежа"] <= end_date)]
+    start_date = end_date - pd.DateOffset(months=3)
+    return df_copy[(df_copy["Дата платежа"] >= start_date ) & (df_copy["Дата платежа"] <= end_date)]
 
 
 def total_spent(df) -> Any:
@@ -132,6 +130,9 @@ def top_transactions(df) -> Any:
     top_five = df_sort_five.to_dict("records")
     return top_five
 
+def group_by(df):
+    return df['Категория'].dropna().unique().tolist()
+
 def write_to_file(file_name):
     def writing(func):
         def wrapper(*args, **kwargs):
@@ -141,6 +142,8 @@ def write_to_file(file_name):
             return result
         return wrapper
     return writing
+
+
 
 # def excel_to_python_data(file_path: str) -> Any:
 #     """Функция принимает ПУТЬ к файлу EXCEL и преобразует его в Python список словарей,

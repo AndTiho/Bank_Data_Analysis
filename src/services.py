@@ -8,7 +8,8 @@ import pandas as pd
 
 def cashback_bank(data, year, month):
     """Функция принимает на вход три аргумента: данные с транзакциями, год и месяц.
-    На выходе мы получаем JSON-файл сколько на каждой категории заработано кэшбэка"""
+    На выходе мы получаем JSON-файл сколько на каждой категории заработано кэшбэка
+    за выбранный месяц года"""
     year_month = datetime.date(year, month, 1)
     data["Дата платежа"] = pd.to_datetime(data["Дата платежа"], dayfirst=True)
     filtered_data = data[

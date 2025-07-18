@@ -1,6 +1,6 @@
 import json
 
-from src.utils import (
+from utils import (
     PATH_TO_EXCEL,
     PATH_TO_JSON,
     excel_to_df,
