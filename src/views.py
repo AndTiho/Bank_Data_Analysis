@@ -15,7 +15,7 @@ from utils import (
 )
 
 
-def main_website_page(user_date):
+def main_website_page(user_date: str)-> str:
     """
     Функция принимает на вход дату в формате YYYY-MM-DD HH:MM:SS и возвращает
     JSON-ответ со следующими данными:
@@ -79,4 +79,3 @@ def main_website_page(user_date):
         ensure_ascii=False,
         indent=4,
     )
-

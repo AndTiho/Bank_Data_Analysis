@@ -3,10 +3,8 @@ import json
 
 import pandas as pd
 
-# from utils import PATH_TO_EXCEL, excel_to_df
 
-
-def cashback_bank(data, year, month):
+def cashback_bank(data: pd.DataFrame, year: int, month: int)->str:
     """Функция принимает на вход три аргумента: данные с транзакциями, год и месяц.
     На выходе мы получаем JSON-файл сколько на каждой категории заработано кэшбэка
     за выбранный месяц года"""
@@ -22,7 +20,3 @@ def cashback_bank(data, year, month):
     sum_price_by_card_number = card_name_grouped["Бонусы (включая кэшбэк)"].sum()
     total_spent_dict = sum_price_by_card_number.to_dict()
     return json.dumps(total_spent_dict, ensure_ascii=False, indent=4)
-
-
-# df = excel_to_df(PATH_TO_EXCEL)
-# print(cashback_bank(df, 2020, 10))

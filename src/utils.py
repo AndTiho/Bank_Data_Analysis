@@ -3,6 +3,7 @@ import os
 import urllib
 from datetime import datetime
 from typing import Any
+
 import pandas as pd
 import requests
 from dotenv import load_dotenv
@@ -18,18 +19,32 @@ PATH_TO_JSON = os.path.join(os.path.dirname(__file__), "../user_settings.json")
 def json_settings_for_currency(file_path: str) -> Any:
     """Функция принимает ПУТЬ к файлу JSON и преобразует его в Python список возвращая значения требуемых валют
     из файла настроек user_settings.json"""
-    with open(file_path, "r", encoding="utf-8") as file:
-        python_data = json.load(file)
-        currency_list = python_data.get("user_currencies")
+    if not isinstance(file_path, str):
+        print("'Путь к файлу' должен быть строкой. Возвращаем пустой список.")
+        return []
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            python_data = json.load(file)
+            currency_list = python_data.get("user_currencies")
+    except OSError:
+        print("Ошибка декодирования файла, возвращаем пустой список.")
+        return []
     return currency_list
 
 
 def json_settings_for_stocks(file_path: str) -> Any:
     """Функция принимает ПУТЬ к файлу JSON и преобразует его в Python список возвращая значения требуемых акций
     из файла настроек user_settings.json"""
-    with open(file_path, "r", encoding="utf-8") as file:
-        python_data = json.load(file)
-        stocks_list = python_data.get("user_stocks")
+    if not isinstance(file_path, str):
+        print("'Путь к файлу' должен быть строкой. Возвращаем пустой список.")
+        return []
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            python_data = json.load(file)
+            stocks_list = python_data.get("user_stocks")
+    except OSError:
+        print("Ошибка декодирования файла, возвращаем пустой список.")
+        return []
     return stocks_list
 
 
@@ -80,13 +95,13 @@ def greetings() -> str:
         return "Доброй ночи"
 
 
-def excel_to_df(file_path: str):
+def excel_to_df(file_path: str) -> pd.DataFrame:
     """Функция принимает путь к файлу с данными Excel и возвращает DataFrame"""
     df = pd.read_excel(file_path)
     return df
 
 
-def filter_by_date(df, user_date: str) -> pd.DataFrame:
+def filter_by_date(df: pd.DataFrame, user_date: str) -> pd.DataFrame:
     """Функция принимает на вход дату и
     фильтрует DataFrame в диапазоне принимаемой даты с начал месяца этой самой даты блин
     """
@@ -96,19 +111,23 @@ def filter_by_date(df, user_date: str) -> pd.DataFrame:
     return df[(df["Дата платежа"] >= start_of_month) & (df["Дата платежа"] <= end_date)]
 
 
-def filter_by_date_three_month(df, user_date: str) -> pd.DataFrame:
+def filter_by_date_three_month(df: pd.DataFrame, user_date: str) -> Any:
     """Функция принимает на вход дату и
     фильтрует DataFrame в диапазоне последние три месяца от принимаемой даты
     Дату вводить в формате YYYY-MM-DD
     """
     df_copy = df.copy()
-    df_copy.loc[:, "Дата платежа"] = pd.to_datetime(df_copy["Дата платежа"], dayfirst=True)
+    df_copy.loc[:, "Дата платежа"] = pd.to_datetime(
+        df_copy["Дата платежа"], dayfirst=True
+    )
     end_date = pd.to_datetime(user_date)
     start_date = end_date - pd.DateOffset(months=3)
-    return df_copy[(df_copy["Дата платежа"] >= start_date ) & (df_copy["Дата платежа"] <= end_date)]
+    return df_copy[
+        (df_copy["Дата платежа"] >= start_date) & (df_copy["Дата платежа"] <= end_date)
+    ]
 
 
-def total_spent(df) -> Any:
+def total_spent(df: pd.DataFrame) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам, группирует по 'Номер карты' и возвращает словарь, где
     ключ: Номер карты, значение: сумма всех трат по карте"""
@@ -120,7 +139,7 @@ def total_spent(df) -> Any:
     return total_spent_dict
 
 
-def top_transactions(df) -> Any:
+def top_transactions(df: pd.DataFrame) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам и возвращает словарь ТОП-5 транзакций по сумме платежа в DF"""
     df_state = df[df["Статус"] == "OK"]
@@ -130,33 +149,22 @@ def top_transactions(df) -> Any:
     top_five = df_sort_five.to_dict("records")
     return top_five
 
-def group_by(df):
-    return df['Категория'].dropna().unique().tolist()
+
+def group_by(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Функция для получения списка всех категорий из файла с транзакциями.
+    """
+    return df["Категория"].dropna().unique().tolist()
+
 
 def write_to_file(file_name):
     def writing(func):
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            with open(file_name, 'w', encoding='utf-8') as file:
+            with open(file_name, "w", encoding="utf-8") as file:
                 file.write(result)
             return result
+
         return wrapper
+
     return writing
-
-
-
-# def excel_to_python_data(file_path: str) -> Any:
-#     """Функция принимает ПУТЬ к файлу EXCEL и преобразует его в Python список словарей,
-#     либо возвращает пустой Python список.
-#      Пример пути к файлу: '../data/operations.xlsx'"""
-#
-#     if not isinstance(file_path, str):
-#         print("'Путь к файлу' должен быть строкой. Возвращаем пустой список.")
-#         return []
-#     try:
-#         df = pd.read_excel(file_path)
-#         excel_data = df.to_dict("records")
-#     except OSError:
-#         print("Ошибка декодирования файла, возвращаем пустой список.")
-#         return []
-#     return list(excel_data)
