@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-from utils import filter_by_date_three_month, write_to_file
+from src.utils import filter_by_date_three_month, write_to_file
 
 
 @write_to_file("./data/results.txt")

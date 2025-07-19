@@ -4,7 +4,7 @@ import json
 import pandas as pd
 
 
-def cashback_bank(data: pd.DataFrame, year: int, month: int)->str:
+def cashback_bank(data: pd.DataFrame, year: int, month: int) -> str:
     """Функция принимает на вход три аргумента: данные с транзакциями, год и месяц.
     На выходе мы получаем JSON-файл сколько на каждой категории заработано кэшбэка
     за выбранный месяц года"""

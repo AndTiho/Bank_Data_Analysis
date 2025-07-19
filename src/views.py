@@ -1,21 +1,12 @@
 import json
 
-from utils import (
-    PATH_TO_EXCEL,
-    PATH_TO_JSON,
-    excel_to_df,
-    filter_by_date,
-    get_currency,
-    get_stocks_data,
-    greetings,
-    json_settings_for_currency,
-    json_settings_for_stocks,
-    top_transactions,
-    total_spent,
-)
+from src.utils import (PATH_TO_EXCEL, PATH_TO_JSON, excel_to_df,
+                       filter_by_date, get_currency, get_stocks_data,
+                       greetings, json_settings_for_currency,
+                       json_settings_for_stocks, top_transactions, total_spent)
 
 
-def main_website_page(user_date: str)-> str:
+def main_website_page(user_date: str) -> str:
     """
     Функция принимает на вход дату в формате YYYY-MM-DD HH:MM:SS и возвращает
     JSON-ответ со следующими данными:

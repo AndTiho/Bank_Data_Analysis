@@ -1,14 +1,17 @@
+import os
 import sys
 import time
 from datetime import datetime
 
-from reports import spending_by_category
-from services import cashback_bank
-from utils import PATH_TO_EXCEL, excel_to_df, greetings, group_by
-from views import main_website_page
+sys.path.append(os.path.abspath("."))
+
+from src.reports import spending_by_category
+from src.services import cashback_bank
+from src.utils import PATH_TO_EXCEL, excel_to_df, greetings, group_by
+from src.views import main_website_page
 
 
-def main()-> str:
+def main() -> str:
     """Функция для отображения всего функционала проекта Bank Analys Data(Bank_AD)"""
 
     # Приветствуем пользователя и просим выбрать какую часть реализуем в отвеет
@@ -217,6 +220,7 @@ def main()-> str:
 ###########
 
 if __name__ == "__main__":
+
     print(main())
 
 ###########
