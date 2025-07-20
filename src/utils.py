@@ -80,6 +80,8 @@ def get_stocks_data(stocks_list: list) -> Any:
         result[i["symbol"]] = i["price"]
     return result
 
+print(get_stocks_data(json_settings_for_stocks(PATH_TO_JSON)))
+
 
 def greetings() -> str:
     """Функция определяет текущее время и приветствует героя
@@ -95,9 +97,14 @@ def greetings() -> str:
         return "Доброй ночи"
 
 
-def excel_to_df(file_path: str) -> pd.DataFrame:
+def excel_to_df(file_path: str) -> str | pd.DataFrame:
     """Функция принимает путь к файлу с данными Excel и возвращает DataFrame"""
-    df = pd.read_excel(file_path)
+    if not isinstance(file_path, str):
+        return 'Программе не передан файл с данными. Закрываем работу программы.'
+    try:
+        df = pd.read_excel(file_path)
+    except FileNotFoundError :
+        return 'Программе не передан файл с данными. Закрываем работу программы.'
     return df
 
 
@@ -105,6 +112,8 @@ def filter_by_date(df: pd.DataFrame, user_date: str) -> pd.DataFrame:
     """Функция принимает на вход дату и
     фильтрует DataFrame в диапазоне принимаемой даты с начал месяца этой самой даты блин
     """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Первый аргумент должен быть объектом pd.DataFrame")
     df["Дата платежа"] = pd.to_datetime(df["Дата платежа"], dayfirst=True)
     end_date = pd.to_datetime(user_date)
     start_of_month = end_date.replace(day=1)
@@ -116,6 +125,8 @@ def filter_by_date_three_month(df: pd.DataFrame, user_date: str) -> Any:
     фильтрует DataFrame в диапазоне последние три месяца от принимаемой даты
     Дату вводить в формате YYYY-MM-DD
     """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Первый аргумент должен быть объектом pd.DataFrame")
     df_copy = df.copy()
     df_copy.loc[:, "Дата платежа"] = pd.to_datetime(
         df_copy["Дата платежа"], dayfirst=True
@@ -131,6 +142,8 @@ def total_spent(df: pd.DataFrame) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам, группирует по 'Номер карты' и возвращает словарь, где
     ключ: Номер карты, значение: сумма всех трат по карте"""
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Первый аргумент должен быть объектом pd.DataFrame")
     df_state = df[df["Статус"] == "OK"]
     df_negative = df_state[df_state["Сумма платежа"] < 0]
     card_name_grouped = df_negative.groupby("Номер карты")
@@ -142,6 +155,8 @@ def total_spent(df: pd.DataFrame) -> Any:
 def top_transactions(df: pd.DataFrame) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам и возвращает словарь ТОП-5 транзакций по сумме платежа в DF"""
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Первый аргумент должен быть объектом pd.DataFrame")
     df_state = df[df["Статус"] == "OK"]
     df_negative = df_state[df_state["Сумма платежа"] < 0]
     df_sort = df_negative.sort_values(by="Сумма платежа", ascending=True)
@@ -154,6 +169,8 @@ def group_by(df: pd.DataFrame) -> pd.DataFrame:
     """
     Функция для получения списка всех категорий из файла с транзакциями.
     """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Первый аргумент должен быть объектом pd.DataFrame")
     return df["Категория"].dropna().unique().tolist()
 
 

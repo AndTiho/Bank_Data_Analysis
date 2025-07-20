@@ -32,3 +32,25 @@ mypy = "^1.16.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.mypy]
+disallow_untyped_defs = true
+warn_return_any = true
+exclude = [
+    'venv',
+    'tests',
+    ]
+
+[tool.black]
+line-length = 119
+exclude = '''
+    (
+    /(
+        \.git
+    )/
+)
+'''
+
+[tool.isort]
+line_length = 119
