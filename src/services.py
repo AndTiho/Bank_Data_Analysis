@@ -10,10 +10,7 @@ def cashback_bank(data: pd.DataFrame, year: int, month: int) -> str:
     за выбранный месяц года"""
     year_month = datetime.date(year, month, 1)
     data["Дата платежа"] = pd.to_datetime(data["Дата платежа"], dayfirst=True)
-    filtered_data = data[
-        data["Дата платежа"].dt.to_period("M")
-        == f"{year_month.year}-{year_month.month}"
-    ]
+    filtered_data = data[data["Дата платежа"].dt.to_period("M") == f"{year_month.year}-{year_month.month}"]
     df_state = filtered_data[filtered_data["Статус"] == "OK"]
     df_negative = df_state[df_state["Сумма платежа"] < 0]
     card_name_grouped = df_negative.groupby("Категория")

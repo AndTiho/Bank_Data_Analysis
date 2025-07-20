@@ -1,9 +1,7 @@
 import json
 
-from src.utils import (PATH_TO_EXCEL, PATH_TO_JSON, excel_to_df,
-                       filter_by_date, get_currency, get_stocks_data,
-                       greetings, json_settings_for_currency,
-                       json_settings_for_stocks, top_transactions, total_spent)
+from src.utils import (PATH_TO_EXCEL, PATH_TO_JSON, excel_to_df, filter_by_date, get_currency, get_stocks_data,
+                       greetings, json_settings_for_currency, json_settings_for_stocks, top_transactions, total_spent)
 
 
 def main_website_page(user_date: str) -> str:

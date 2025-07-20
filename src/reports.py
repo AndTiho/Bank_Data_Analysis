@@ -8,9 +8,7 @@ from src.utils import filter_by_date_three_month, write_to_file
 
 
 @write_to_file("./data/results.txt")
-def spending_by_category(
-    transactions: pd.DataFrame, category: str, date: Optional[str] = None
-) -> str:
+def spending_by_category(transactions: pd.DataFrame, category: str, date: Optional[str] = None) -> str:
     """Функция принимает данные транзакций, категорию на выбор пользователя и дату
     (по умолчанию берётся сегодняшняя) и возвращает траты по заданной категории за последние три месяца
     """
@@ -27,3 +25,5 @@ def spending_by_category(
 
     # Возвращаем JSON
     return json.dumps(result, ensure_ascii=False, indent=4)
+
+

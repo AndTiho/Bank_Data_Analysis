@@ -7,7 +7,11 @@ from typing import Any
 import pandas as pd
 import requests
 from dotenv import load_dotenv
+from typing import Callable, Any, TypeVar, ParamSpec
 
+
+T = TypeVar('T')
+P = ParamSpec('P')
 load_dotenv()
 api_key_for_currency = os.getenv("API_KEY_for_currency")
 api_key_for_stocks = os.getenv("API_KEY_for_stocks")
@@ -80,6 +84,7 @@ def get_stocks_data(stocks_list: list) -> Any:
         result[i["symbol"]] = i["price"]
     return result
 
+
 print(get_stocks_data(json_settings_for_stocks(PATH_TO_JSON)))
 
 
@@ -100,15 +105,15 @@ def greetings() -> str:
 def excel_to_df(file_path: str) -> str | pd.DataFrame:
     """Функция принимает путь к файлу с данными Excel и возвращает DataFrame"""
     if not isinstance(file_path, str):
-        return 'Программе не передан файл с данными. Закрываем работу программы.'
+        return "Программе не передан файл с данными. Закрываем работу программы."
     try:
         df = pd.read_excel(file_path)
-    except FileNotFoundError :
-        return 'Программе не передан файл с данными. Закрываем работу программы.'
+    except FileNotFoundError:
+        return "Программе не передан файл с данными. Закрываем работу программы."
     return df
 
 
-def filter_by_date(df: pd.DataFrame, user_date: str) -> pd.DataFrame:
+def filter_by_date(df: str | pd.DataFrame, user_date: str) -> Any:
     """Функция принимает на вход дату и
     фильтрует DataFrame в диапазоне принимаемой даты с начал месяца этой самой даты блин
     """
@@ -120,7 +125,7 @@ def filter_by_date(df: pd.DataFrame, user_date: str) -> pd.DataFrame:
     return df[(df["Дата платежа"] >= start_of_month) & (df["Дата платежа"] <= end_date)]
 
 
-def filter_by_date_three_month(df: pd.DataFrame, user_date: str) -> Any:
+def filter_by_date_three_month(df: str | pd.DataFrame, user_date: str) -> Any:
     """Функция принимает на вход дату и
     фильтрует DataFrame в диапазоне последние три месяца от принимаемой даты
     Дату вводить в формате YYYY-MM-DD
@@ -128,17 +133,13 @@ def filter_by_date_three_month(df: pd.DataFrame, user_date: str) -> Any:
     if not isinstance(df, pd.DataFrame):
         raise TypeError("Первый аргумент должен быть объектом pd.DataFrame")
     df_copy = df.copy()
-    df_copy.loc[:, "Дата платежа"] = pd.to_datetime(
-        df_copy["Дата платежа"], dayfirst=True
-    )
+    df_copy.loc[:, "Дата платежа"] = pd.to_datetime(df_copy["Дата платежа"], dayfirst=True)
     end_date = pd.to_datetime(user_date)
     start_date = end_date - pd.DateOffset(months=3)
-    return df_copy[
-        (df_copy["Дата платежа"] >= start_date) & (df_copy["Дата платежа"] <= end_date)
-    ]
+    return df_copy[(df_copy["Дата платежа"] >= start_date) & (df_copy["Дата платежа"] <= end_date)]
 
 
-def total_spent(df: pd.DataFrame) -> Any:
+def total_spent(df: str | pd.DataFrame) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам, группирует по 'Номер карты' и возвращает словарь, где
     ключ: Номер карты, значение: сумма всех трат по карте"""
@@ -152,7 +153,7 @@ def total_spent(df: pd.DataFrame) -> Any:
     return total_spent_dict
 
 
-def top_transactions(df: pd.DataFrame) -> Any:
+def top_transactions(df: str | pd.DataFrame) -> Any:
     """Функция принимает на вход DataFrame и с помощью pandas фильтрует по 'Статус': 'OK/Failed',
     фильтрует по тратам и возвращает словарь ТОП-5 транзакций по сумме платежа в DF"""
     if not isinstance(df, pd.DataFrame):
@@ -165,7 +166,7 @@ def top_transactions(df: pd.DataFrame) -> Any:
     return top_five
 
 
-def group_by(df: pd.DataFrame) -> pd.DataFrame:
+def group_by(df: str | pd.DataFrame) -> Any:
     """
     Функция для получения списка всех категорий из файла с транзакциями.
     """
@@ -174,14 +175,12 @@ def group_by(df: pd.DataFrame) -> pd.DataFrame:
     return df["Категория"].dropna().unique().tolist()
 
 
-def write_to_file(file_name):
-    def writing(func):
-        def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
+def write_to_file(file_name: str) -> Callable[[Callable[P, str]], Callable[P, str]]:
+    def writing(func: Callable[P, str]) -> Callable[P, str]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> str:
+            result: str = func(*args, **kwargs)
             with open(file_name, "w", encoding="utf-8") as file:
                 file.write(result)
             return result
-
         return wrapper
-
     return writing

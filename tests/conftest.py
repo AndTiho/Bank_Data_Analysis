@@ -12,6 +12,7 @@ def my_dataframe():
     )
     return df
 
+
 @pytest.fixture
 def my_category_list():
     return [
@@ -66,12 +67,7 @@ def my_category_list():
         "Duty Free",
     ]
 
-TEST_STOCKS = ['AAPL', 'GOOGL']
-TEST_RESPONSE_AAPL = {
-    "symbol": "AAPL",
-    "price": 150.0
-}
-TEST_RESPONSE_GOOGL = {
-    "symbol": "GOOGL",
-    "price": 2800.0
-}
+
+TEST_STOCKS = ["AAPL", "GOOGL"]
+TEST_RESPONSE_AAPL = {"symbol": "AAPL", "price": 150.0}
+TEST_RESPONSE_GOOGL = {"symbol": "GOOGL", "price": 2800.0}
