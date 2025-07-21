@@ -5,10 +5,14 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
+import requests
+from requests import HTTPError
+from requests.exceptions import RequestException
 
-from src.utils import (PATH_TO_EXCEL, PATH_TO_JSON, excel_to_df, filter_by_date, filter_by_date_three_month,
-                       get_currency, get_stocks_data, greetings, group_by, json_settings_for_currency,
-                       json_settings_for_stocks, top_transactions, total_spent, write_to_file)
+from src.utils import (PATH_TO_EXCEL, PATH_TO_JSON, excel_to_df, excel_to_python_data, filter_by_date,
+                       filter_by_date_three_month, get_currency, get_stocks_data, greetings, group_by,
+                       json_settings_for_currency, json_settings_for_stocks, top_transactions, total_spent,
+                       write_to_file)
 
 # Тесты для json_settings_for_currency - использует JSON настройки для получения нужных валют
 
@@ -75,6 +79,39 @@ def test_get_currency():
         assert get_currency(["USD", "EUR"]) == {"USD": 90, "EUR": 100}
 
 
+def test_connection_error():
+    with patch("requests.request") as mocked_get:
+        mocked_get.side_effect = requests.exceptions.ConnectionError()
+        with pytest.raises(ConnectionError) as exc_info:
+            get_currency(["USD", "EUR"])
+        assert str(exc_info.value) == "Ошибка подключения. Проверьте интернет-соединение"
+
+
+def test_http_error():
+    with patch("requests.request") as mocked_get:
+        mocked_get.return_value.raise_for_status.side_effect = requests.exceptions.HTTPError("Неверный API ключ")
+        with pytest.raises(HTTPError) as exc_info:
+            get_currency(["USD", "EUR"])
+        assert str(exc_info.value) == "HTTP ошибка. Проверьте URL или API ключ"
+
+
+# Тест для проверки ошибки таймаута
+def test_timeout_error():
+    with patch("requests.request") as mocked_get:
+        mocked_get.side_effect = requests.exceptions.Timeout()
+        with pytest.raises(TimeoutError) as exc_info:
+            get_currency(["USD", "EUR"])
+        assert str(exc_info.value) == "Превышено время ожидания. Проверьте интернет-соединение"
+
+
+def test_missing_rates():
+    with patch("requests.request") as mocked_get:
+        mocked_get.return_value.json.return_value = {"success": False}
+        with pytest.raises(ValueError) as exc_info:
+            get_currency(["USD", "EUR"])
+        assert "Ошибка: Похоже вы исчерпали все бесплатные запросы." in str(exc_info.value)
+
+
 # Тесты для get_stocks_data - получение курса Акций с API
 
 
@@ -89,6 +126,23 @@ def test_get_stocks_data_correct_work():
         mock_urlopen.side_effect = [mock_response_aapl, mock_response_googl]
 
         assert get_stocks_data(["AAPL", "GOOGL"]) == {"AAPL": 150.0, "GOOGL": 2800.0}
+
+
+def test_get_stocks_data_missing_keys():
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps([{"symbol": "AAPL"}]).encode("utf-8")
+        mock_urlopen.return_value = mock_response
+
+        result = get_stocks_data(["AAPL"])
+        assert result == {}
+
+
+def test_get_stocks_data_request_exception():
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_urlopen.side_effect = RequestException("Request error")
+        result = get_stocks_data(["AAPL"])
+        assert result == {}
 
 
 # greetings - простое приветствие по текущей дате/времени
@@ -236,3 +290,20 @@ def test_basic_functionality():
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
             assert content == "Test string", "Ошибка в содержимом файла"
+
+
+# excel_to_python_data - порт данных с экселя в список словарей для services
+
+
+@pytest.mark.parametrize(
+    "path, expected_result", [(0, []), ("", []), (1.5, []), ("not_a path", []), (None, []), ([], [])]
+)
+def test_all_errors_excel(path, expected_result):
+    assert excel_to_python_data(path) == expected_result
+
+
+def test_excel_to_python_data(my_list):
+    mock_df = pd.DataFrame(my_list)
+    with patch("pandas.read_excel", return_value=mock_df):
+        result = excel_to_python_data("any_path")
+        assert result == my_list

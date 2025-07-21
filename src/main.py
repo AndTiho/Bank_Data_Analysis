@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import time
@@ -7,8 +8,20 @@ sys.path.append(os.path.abspath("."))
 
 from src.reports import spending_by_category
 from src.services import cashback_bank
-from src.utils import PATH_TO_EXCEL, excel_to_df, greetings, group_by
+from src.utils import PATH_TO_EXCEL, excel_to_df, excel_to_python_data, greetings, group_by
 from src.views import main_website_page
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filename="./logs/reports.log",
+    filemode="w",
+    encoding="utf-8",
+)
+
+spending_by_category_logger = logging.getLogger("app.spending_by_category")
+main_website_page_logger = logging.getLogger("app.main_website_page")
+cashback_bank_logger = logging.getLogger("app.cashback_bank")
 
 
 def main() -> str:
@@ -119,8 +132,9 @@ def main() -> str:
 
         # Передаём в нашу функцию полученные параметры и тянем DataFrame через
         # заготовленную функцию из utils.py и кидаем туда же
-        df = excel_to_df(PATH_TO_EXCEL)
-        result = cashback_bank(df, year, month)
+        data = excel_to_python_data(PATH_TO_EXCEL)
+        result = cashback_bank(data, year, month)
+
         return result
 
     # Тут работаем с функционалом из reports.py
@@ -136,7 +150,8 @@ def main() -> str:
         time.sleep(1)
         print(
             "Для корректной работы программы, просим вас выбрать категорию из тех,"
-            "что предоставлены в файле с транзакциями"
+            "что предоставлены в файле с транзакциями\n"
+            "Для теста рекомендуется скопировать: Аптеки"
         )
         time.sleep(1)
         print(f"{group_by(df)}")
@@ -194,6 +209,8 @@ def main() -> str:
         time.sleep(1)
         print('Напоминаем, что по заданию функция декорирована записью("w") результата в results.txt ')
         time.sleep(3)
+        if result == "[]":
+            print("К сожалению трат по выбранной категории в это время не было.")
         return result
 
     # Здесь отрабатывается вариант exit -> выход из программы

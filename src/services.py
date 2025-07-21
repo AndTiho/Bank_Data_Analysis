@@ -1,19 +1,31 @@
-import datetime
 import json
+import logging
+import math
+from collections import Counter
+from typing import Counter as CounterType
+from typing import List
 
-import pandas as pd
+cashback_bank_logger = logging.getLogger("app.cashback_bank")
 
 
-def cashback_bank(data: pd.DataFrame, year: int, month: int) -> str:
+def cashback_bank(data: List, year: int, month: int) -> str:
     """Функция принимает на вход три аргумента: данные с транзакциями, год и месяц.
     На выходе мы получаем JSON-файл сколько на каждой категории заработано кэшбэка
     за выбранный месяц года"""
-    year_month = datetime.date(year, month, 1)
-    data["Дата платежа"] = pd.to_datetime(data["Дата платежа"], dayfirst=True)
-    filtered_data = data[data["Дата платежа"].dt.to_period("M") == f"{year_month.year}-{year_month.month}"]
-    df_state = filtered_data[filtered_data["Статус"] == "OK"]
-    df_negative = df_state[df_state["Сумма платежа"] < 0]
-    card_name_grouped = df_negative.groupby("Категория")
-    sum_price_by_card_number = card_name_grouped["Бонусы (включая кэшбэк)"].sum()
-    total_spent_dict = sum_price_by_card_number.to_dict()
-    return json.dumps(total_spent_dict, ensure_ascii=False, indent=4)
+    cashback_bank_logger.info("Начало работы программы")
+
+    if not isinstance(data, list):
+        print("Данные должны быть списком словарей. Возвращаем пустой список.")
+        cashback_bank_logger.warning("Данные должны быть списком словарей. Завершаем работу программы")
+        return json.dumps([])
+    year = int(year) if isinstance(year, str) else year
+    month = int(month) if isinstance(month, str) else month
+
+    new_list = [i for i in data if f"{month}.{year}" in str(i["Дата платежа"])]
+    cashback_counter: CounterType[str] = Counter()
+    for item in new_list:
+        if item["Кэшбэк"] is not None and not math.isnan(item["Кэшбэк"]):
+            cashback_counter[item["Категория"]] += item["Кэшбэк"]
+
+    cashback_bank_logger.info("Программа отработала корректно. Завершение работы")
+    return json.dumps(cashback_counter, ensure_ascii=False, indent=4, sort_keys=True)

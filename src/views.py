@@ -1,7 +1,10 @@
 import json
+import logging
 
 from src.utils import (PATH_TO_EXCEL, PATH_TO_JSON, excel_to_df, filter_by_date, get_currency, get_stocks_data,
                        greetings, json_settings_for_currency, json_settings_for_stocks, top_transactions, total_spent)
+
+main_website_page_logger = logging.getLogger("app.main_website_page")
 
 
 def main_website_page(user_date: str) -> str:
@@ -17,7 +20,7 @@ def main_website_page(user_date: str) -> str:
     4. Курс валют.
     5. Стоимость акций из S&P500.
     """
-
+    main_website_page_logger.info("Начало работы программы")
     # Получаем DataFrame и фильтруем по входящей дате
     df = excel_to_df(PATH_TO_EXCEL)
     filtered_df = filter_by_date(df, user_date)
@@ -57,6 +60,7 @@ def main_website_page(user_date: str) -> str:
     for key, value in stocks.items():
         stocks_json.append({"stock": key, "price": value})
 
+    main_website_page_logger.info("Программа отработала корректно. Завершение работы")
     return json.dumps(
         {
             "greeting": greetings(),

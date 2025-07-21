@@ -2,16 +2,15 @@ import json
 import os
 import urllib
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable, ParamSpec, TypeVar
 
 import pandas as pd
 import requests
 from dotenv import load_dotenv
-from typing import Callable, Any, TypeVar, ParamSpec
+from requests import HTTPError
 
-
-T = TypeVar('T')
-P = ParamSpec('P')
+T = TypeVar("T")
+P = ParamSpec("P")
 load_dotenv()
 api_key_for_currency = os.getenv("API_KEY_for_currency")
 api_key_for_stocks = os.getenv("API_KEY_for_stocks")
@@ -55,19 +54,32 @@ def json_settings_for_stocks(file_path: str) -> Any:
 def get_currency(currency_list: list) -> Any:
     """Функция принимает на вход список из двух валют требуемых для нахождения курсов с apilayer.com
     и возвращает словарь 'Валюта: курс в рублях'"""
-    url_x = f"https://api.apilayer.com/exchangerates_data/latest?symbols=RUB&base={currency_list[0]}"
-    url_y = f"https://api.apilayer.com/exchangerates_data/latest?symbols=RUB&base={currency_list[1]}"
-    payload: dict = {}
-    headers = {"apikey": api_key_for_currency}
-    response_x = requests.request("GET", url_x, headers=headers, data=payload)
-    result_x = response_x.json()
-    response_y = requests.request("GET", url_y, headers=headers, data=payload)
-    result_y = response_y.json()
+    try:
+        url_x = f"https://api.apilayer.com/exchangerates_data/latest?symbols=RUB&base={currency_list[0]}"
+        url_y = f"https://api.apilayer.com/exchangerates_data/latest?symbols=RUB&base={currency_list[1]}"
+        payload: dict = {}
+        headers = {"apikey": api_key_for_currency}
+        response_x = requests.request("GET", url_x, headers=headers, data=payload)
+        response_x.raise_for_status()
+        result_x = response_x.json()
+        response_y = requests.request("GET", url_y, headers=headers, data=payload)
+        response_y.raise_for_status()
+        result_y = response_y.json()
 
-    return {
-        currency_list[0]: result_x["rates"]["RUB"],
-        currency_list[1]: result_y["rates"]["RUB"],
-    }
+        if "rates" not in result_x or "rates" not in result_y:
+            raise ValueError("Похоже вы исчерпали все бесплатные запросы.")
+        return {
+            currency_list[0]: result_x["rates"]["RUB"],
+            currency_list[1]: result_y["rates"]["RUB"],
+        }
+    except requests.exceptions.ConnectionError:
+        raise ConnectionError("Ошибка подключения. Проверьте интернет-соединение")
+    except requests.exceptions.HTTPError:
+        raise HTTPError("HTTP ошибка. Проверьте URL или API ключ")
+    except requests.exceptions.Timeout:
+        raise TimeoutError("Превышено время ожидания. Проверьте интернет-соединение")
+    except ValueError as e:
+        raise ValueError(f"Ошибка: {e}")
 
 
 def get_stocks_data(stocks_list: list) -> Any:
@@ -75,17 +87,24 @@ def get_stocks_data(stocks_list: list) -> Any:
     словарь в виде 'Акция': 'Стоимость'"""
     data = []
     result = {}
-    for stock in stocks_list:
-        url = f"https://financialmodelingprep.com/stable/quote-short?symbol={stock}&apikey={api_key_for_stocks}"
-        response = urllib.request.urlopen(url)
-        json_data = json.loads(response.read().decode("utf-8"))
-        data.append(json_data[0])
-    for i in data:
-        result[i["symbol"]] = i["price"]
-    return result
+    try:
+        for stock in stocks_list:
+            url = f"https://financialmodelingprep.com/stable/quote-short?symbol={stock}&apikey={api_key_for_stocks}"
+            response = urllib.request.urlopen(url)
+            json_data = json.loads(response.read().decode("utf-8"))
+            data.append(json_data[0])
+        if not "symbol" or not "price":
+            raise ValueError("Похоже вы исчерпали все бесплатные запросы")
+        for i in data:
+            result[i["symbol"]] = i["price"]
+        return result
 
-
-print(get_stocks_data(json_settings_for_stocks(PATH_TO_JSON)))
+    except requests.exceptions.RequestException as e:
+        print(f"Ошибка при запросе к API: {e}")
+        return {}
+    except KeyError as e:
+        print(f"Ошибка в структуре ответа API: {e}")
+        return {}
 
 
 def greetings() -> str:
@@ -182,5 +201,24 @@ def write_to_file(file_name: str) -> Callable[[Callable[P, str]], Callable[P, st
             with open(file_name, "w", encoding="utf-8") as file:
                 file.write(result)
             return result
+
         return wrapper
+
     return writing
+
+
+def excel_to_python_data(file_path: str) -> Any:
+    """Функция принимает ПУТЬ к файлу EXCEL и преобразует его в Python список словарей,
+    либо возвращает пустой Python список.
+     Пример пути к файлу: './data/transactions_excel.xlsx'"""
+
+    if not isinstance(file_path, str):
+        print("'Путь к файлу' должен быть строкой. Возвращаем пустой список.")
+        return []
+    try:
+        df = pd.read_excel(file_path)
+        excel_data = df.to_dict("records")
+    except OSError:
+        print("Ошибка декодирования файла, возвращаем пустой список.")
+        return []
+    return list(excel_data)
